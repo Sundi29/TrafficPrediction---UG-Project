@@ -1,0 +1,505 @@
+from graphics import *
+from sys import *
+from collections import *
+from reg_tree import *
+from kalmanfiltersdb import *
+from NonLinearRegression import *
+class Graph:
+  def __init__(self):
+    self.nodes = set()
+    self.edges = defaultdict(list)
+    self.distances = {}
+ 
+  def add_node(self, value):
+    self.nodes.add(value)
+ 
+  def add_edge(self, from_node, to_node, distance):
+    self.edges[from_node].append(to_node)
+    self.edges[to_node].append(from_node)
+    self.distances[(from_node, to_node)] = distance
+  def printedgenode(self):
+    print self.edges
+    print self.nodes
+    print self.distances 
+ 
+def dijsktra(graph, initial):
+  visited = {initial: 0}
+  path = {}
+ 
+  nodes = set(graph.nodes)
+ 
+  while nodes: 
+    min_node = None
+    for node in nodes:
+      if node in visited:
+        if min_node is None:
+          min_node = node
+        elif visited[node] < visited[min_node]:
+          min_node = node
+ 
+    if min_node is None:
+      break
+ 
+    nodes.remove(min_node)
+    current_weight = visited[min_node]
+ 
+    for edge in graph.edges[min_node]:
+      weight = current_weight + graph.distances[(min_node, edge)]
+      if edge not in visited or weight < visited[edge]:
+        visited[edge] = weight
+        path[edge] = min_node
+ 
+  return visited, path
+
+road = ["AB","BA","CD","AE","CE","CF","AD", "EC", "DC", "BE", "EB", "BF", "FB"]
+diff1 = 0
+diff2 = 0
+diff3 = 0
+ch = 1
+graph = Graph()
+graph1 = Graph()
+graph.add_node("A")
+graph.add_node("B")
+graph.add_node("C")
+graph.add_node("D")
+graph.add_node("E")
+graph.add_node("F")
+graph1.add_node("A")
+graph1.add_node("B")
+graph1.add_node("C")
+graph1.add_node("D")
+graph1.add_node("E")
+graph1.add_node("F")
+
+def addedge(val):
+  graph.add_edge("A", "B", val[0])
+  graph.add_edge("A", "C", 10000)
+  graph.add_edge("A", "D", val[6])
+  graph.add_edge("A", "E", val[3])
+  graph.add_edge("A", "F", 10000)
+  graph.add_edge("B", "A", val[1])
+  graph.add_edge("B", "C", 10000)
+  graph.add_edge("B", "D", 10000)
+  graph.add_edge("B", "E", val[9])
+  graph.add_edge("B", "F", val[11])
+  graph.add_edge("C", "A", 10000)
+  graph.add_edge("C", "B", 10000)
+  graph.add_edge("C", "D", val[2])
+  graph.add_edge("C", "E", val[4])
+  graph.add_edge("C", "F", val[5])
+  graph.add_edge("D", "A", 10000)
+  graph.add_edge("D", "B", 10000)
+  graph.add_edge("D", "C", val[8])
+  graph.add_edge("D", "E", 10000)
+  graph.add_edge("D", "F", 10000)
+  graph.add_edge("E", "A", 10000)
+  graph.add_edge("E", "B", val[10])
+  graph.add_edge("E", "C", val[7])
+  graph.add_edge("E", "D", 10000)
+  graph.add_edge("E", "F", 10000)
+  graph.add_edge("F", "A", 10000)
+  graph.add_edge("F", "B", val[12])
+  graph.add_edge("F", "C", 10000) 
+  graph.add_edge("F", "D", 10000)
+  graph.add_edge("F", "E", 10000)
+  
+def circledraw(color, p1, p2, no, win):
+  circle1 = Circle(Point(p1, p2), 20)
+  circle1.setFill(color)
+  circle1.draw(win)
+
+  text1 = Text(Point(p1, p2), no)
+  text1.setTextColor('white')
+  text1.draw(win)
+  
+def linedraw(color, p11, p12, p21, p22, win):
+  line = Line(Point(p11,p12), Point(p21,p22))
+  line.setFill(color)
+  line.draw(win)  
+
+def textdisp(color, p1, p2, st, win):
+  text1 = Text(Point(p1, p2), st)
+  text1.setTextColor(color)
+  text1.draw(win)
+
+def drawGraph(win):
+  #Drawing all the nodes 
+  circledraw('black', 180, 150, "A", win)
+  circledraw('black', 220, 500, "B", win)
+  circledraw('black', 800, 450, "C", win)
+  circledraw('black', 650, 100, "D", win)  
+  circledraw('black', 500, 325, "E", win)
+  circledraw('black', 950, 620, "F", win)
+  #Drawing all the Edges
+  linedraw('black', 176, 146, 216, 496, win)#AB
+  linedraw('black', 184, 154, 224, 504, win)#BA
+  linedraw('black', 180, 150, 650, 100, win)#AD
+  linedraw('black', 180, 150, 500, 325, win)#AE
+  linedraw('black', 804, 454, 654, 104, win)#CD
+  linedraw('black', 646, 96, 796, 446, win)#DC
+  linedraw('black', 496, 321, 796, 446, win)#CE
+  linedraw('black', 504, 329, 804, 454, win)#EC
+  linedraw('black', 800, 450, 950, 620, win)#CF
+  linedraw('black', 224, 504, 504, 329, win)#BE
+  linedraw('black', 216, 496, 496, 321, win)#EB
+  linedraw('black', 216, 496, 946, 616, win)#BF
+  linedraw('black', 224, 504, 954, 624, win)#FB
+def startanddest(color):
+  if(start == "A"):
+    circledraw(color, 180, 150, "A", win)
+  elif( start == "B" ):
+    circledraw(color, 220, 500, "B", win)
+  elif(start == "C"):
+    circledraw(color, 800, 450, "C", win)
+  elif(start == "D"):
+    circledraw(color, 650, 100, "D", win)
+  elif(start == "E"):
+    circledraw(color, 500, 325, "E", win)
+  elif(start == "F"):
+    circledraw(color, 950, 620, "F", win)  
+
+  if(dest == "A"):
+    circledraw(color, 180, 150, "A", win)
+  elif(dest == "B"):
+    circledraw(color, 220, 500, "B", win)
+  elif(dest == "C"):
+    circledraw(color, 800, 450, "C", win)
+  elif(dest == "D"):
+    circledraw(color, 650, 100, "D", win)
+  elif(dest == "E"):
+    circledraw(color, 500, 325, "E", win)
+  elif(dest == "F"):
+    circledraw(color, 950, 620, "F", win)  
+def distroute():
+  button = Rectangle(Point(110, 650), Point(225, 675))
+  button.setFill('black')
+  button.draw(win)
+  textdisp('white', 165, 662, "Distance Route", win)
+def timeroute():
+  button = Rectangle(Point(110, 650), Point(225, 675))
+  button.setFill('black')
+  button.draw(win)
+  textdisp('white', 165, 662, "Time Route", win)  
+
+def routedrawing(route, rd, color):
+  i = 0
+  s = 0
+  while(i<(len(route)-1)):
+    p1 = route[i]
+    p2 = route[i+1] 
+    if(p1 == "A"):
+      if(p2 == "B"):
+        linedraw(color, 176, 146, 216, 496, win)#AB
+        circledraw(color, 220, 500, "B", win)
+      elif(p2 == "E"):
+        linedraw(color, 180, 150, 500, 325, win)
+        circledraw(color, 500, 325, "E", win)
+      elif(p2 == "D"):
+        linedraw(color, 180, 150, 650, 100, win)#AD
+        circledraw(color, 650, 100, "D", win)
+    elif(p1 == "B"):
+      if(p2 == "E"):
+        linedraw(color, 224, 504, 504, 329, win)#BE
+        circledraw(color, 500, 325, "E", win)
+      elif(p2 == "A"):
+        linedraw(color, 184, 154, 224, 504, win)#BA
+        circledraw(color, 180, 150, "A", win)
+      elif(p2 == "F"):
+        linedraw(color, 216, 496, 946, 616, win)
+        circledraw(color, 950, 620, "F", win)  
+    elif(p1 == "C"):
+      if(p2 == "D"):
+        linedraw(color, 804, 454, 654, 104, win)#CD
+        circledraw(color, 650, 100, "D", win)
+      elif(p2 == "E"):
+        linedraw(color, 496, 321, 796, 446, win)#CE
+        circledraw(color, 500, 325, "E", win)
+      elif(p2 == "F"):
+        linedraw(color, 800, 450, 950, 620, win)#CF
+        circledraw(color, 950, 620, "F", win)
+    elif(p1 == "D"):
+      if(p2 == "C"):
+        linedraw(color, 646, 96, 796, 446, win)#DC
+        circledraw(color, 800, 450, "C", win)
+    elif(p1 == "E"):
+      if(p2 == "B"):
+        linedraw(color, 216, 496, 496, 321, win)#EB
+        circledraw(color, 220, 500, "B", win)
+      elif(p2 == "C"):
+        linedraw(color, 504, 329, 804, 454, win)#EC
+        circledraw(color, 800, 450, "C", win)
+    elif(p1 == "F"):
+      if(p2 == "B"):
+        linedraw(color, 224, 504, 954, 624, win)#FB
+        circledraw(color, 220, 500, "B", win)
+    s =s + graph.distances[(route[i], route[i+1])]
+    i = i + 1
+  if(s<1):
+    s2 = int(s * 60)
+    if(rd == 1):
+      unit2 = "Minutes"
+    else:
+      unit2 = "Meters"
+  else:
+    s2 = int(s)
+    if(rd == 1):
+      unit2 = "Hours"
+    else:
+      unit2 = "Kms"
+  if(rd == 1):
+    unit1 = "The Total Time: "
+  else:
+    unit1 = "The Total Distance: " 
+  s1 = str(s2)
+  textdisp('black', 100, 100, "Monday, 0600", win)
+  textdisp('black', 400, 585, unit1, win)
+  textdisp(color, 480, 585, s2, win)
+  textdisp(color, 515, 585, unit2, win)
+  if(rd == 1):
+    j = 0
+    d = 0
+    while(j<(len(route)-1)):
+      s = route[j] + route[j+1]
+      d = d + dist[s]
+      j = j + 1
+    textdisp('black', 400, 615, "The Total Distance: ", win)
+    d1 = str(d)
+    textdisp(color, 480, 615, d1, win)
+    textdisp(color, 515, 615, "Kms", win)
+  button = Rectangle(Point(650, 650), Point(730, 680))  
+  button.setFill('black')
+  button.draw(win)
+  textdisp('white', 690, 665, "Close", win)
+
+  button = Rectangle(Point(310, 650), Point(450, 680))
+  button.setFill('black')
+  button.draw(win)
+  textdisp('white', 380, 665, "Another Route", win)
+  if(rd == 1):
+    distroute()
+    rd = 2
+    color = 'blue'
+  else:
+    timeroute()
+    rd = 1
+    color = 'red'
+  return rd, color
+
+def maxdiff(a, b, c):
+  t1 = max(a, b, c)
+  if(t1 == a):
+    t2 = max(b, c)
+    if(t2 == b):
+      t3 = c
+    else:
+      t3 = b
+  elif(t1 == b):
+    t2 = max(a, c)
+    if(t2 == a):
+      t3 = c
+    else:
+      t3 = a
+  else:
+    t2 = max(a, b)
+    if(t2 == a):
+      t3 = b
+    else:
+      t3 = a
+  return t1, t2, t3
+while(ch == 1):
+  
+  #Displaying the Graph
+  win1 = GraphWin("Graph", 1000, 700)
+  drawGraph(win1)
+
+  #Displaying the Input 
+  win2 = GraphWin("Graph2", 500, 500)
+
+  textdisp('black', 133, 100, "Input Start Node: ", win2)
+  entry1 = Entry(Point(300, 100), 5)
+  entry1.draw(win2)
+
+  textdisp('black', 155, 140, "Input Destination Node: ", win2)   
+  entry2 = Entry(Point(300, 140), 5)
+  entry2.draw(win2)
+
+  textdisp('black', 145, 220, "Enter Date of Month: ", win2)
+  entry4 = Entry(Point(322, 180), 10)
+  entry4.draw(win2)
+
+  textdisp('black', 110, 180, "Enter Day: ", win2)
+  entry3 = Entry(Point(300, 220), 5)
+  entry3.draw(win2)
+
+  textdisp('black', 115, 260, "Enter Month: ", win2)
+  entry5 = Entry(Point(300, 260), 5)
+  entry5.draw(win2)
+
+  textdisp('black', 115, 300, "Enter Time: ", win2)
+  entry6 = Entry(Point(322, 300), 10)
+  entry6.draw(win2)
+
+  button1 = Rectangle(Point(280, 340), Point(380, 365))
+  button1.setFill('black')  
+  button1.draw(win2)
+  textdisp('white', 330, 350, "Time Route", win2)
+
+
+  button2 = Rectangle(Point(100, 340), Point(215, 365))
+  button2.setFill('black')  
+  button2.draw(win2)
+  textdisp('white', 157, 350, "Distance Route", win2)
+
+  button1 = Rectangle(Point(215, 410), Point(280, 435))
+  button1.setFill('black')  
+  button1.draw(win2)
+  textdisp('white', 245, 422, "Exit", win2)
+  p1 = win2.getMouse()
+  while((not((p1.getX() >= 280 and p1.getX() <= 380) and (p1.getY() >= 340 and p1.getY() <= 365))) and (not((p1.getX() >= 100 and p1.getX() <= 215) and (p1.getY() >= 340 and p1.getY() <= 365))) and (not((p1.getX() >= 215 and p1.getX() <= 280) and (p1.getY() >= 410 and p1.getY() <= 435)))):
+    p1 = win2.getMouse()
+  if((p1.getX() >= 280 and p1.getX() <= 380) and (p1.getY() >= 340 and p1.getY() <= 365)):
+    win2.close()
+    win1.close()
+    rd = 1
+  elif((p1.getX() >= 100 and p1.getX() <= 215) and (p1.getY() >= 340 and p1.getY() <= 365)):
+    win2.close()
+    win1.close()
+    rd = 2
+  elif((p1.getX() >= 215 and p1.getX() <= 280) and (p1.getY() >= 410 and p1.getY() <= 435)):
+    win2.close()
+    win1.close()
+    sys.exit()
+  start = entry1.getText()
+  dest = entry2.getText()
+  day = entry4.getText()
+  month = int(entry5.getText())
+  date = int(entry3.getText())
+  time = int(entry6.getText())
+  val = []
+  valobs = []
+  distance = [34, 34, 11, 15, 23, 19, 56, 23, 11, 21, 21, 8, 8]
+  dist = {"AB": 34, 'BA': 34, 'CD': 11, 'AE': 15, "CE": 23, "CF": 19, "AD": 56, "EC": 23, "DC": 11, "BE": 21, "EB": 21, "BF": 8, "FB": 8}
+  if(rd == 1):
+    obs, pred1 = reg(date, month, time)
+    print "reg over"
+    pred2 = kf(date, month, time)
+    print "kf over"
+    pred3 = NLR(day, date, month, time)
+    print "NLR over"
+    predrid = []
+    k = 0
+    i = 0
+    wt1 = []
+    wt2 = []
+    wt3 = []
+    while(k<len(obs)):
+      diff1 = diff1 + (abs(pred1[i] - obs[i]))
+      diff2 = diff2 + (abs(pred2[i] - obs[i]))
+      diff3 = diff3 + (abs(pred3[i] - obs[i]))
+      k = k + 1
+    while(i<13):
+      #temp1 = (pred1[i] + pred2[i] + pred3[i])/2
+      wt3, wt2, wt1 = maxdiff(diff1, diff2, diff3)
+      if(wt3 == diff1):
+        wt3 = pred1
+      elif(wt3 == diff2):
+        wt3 = pred2
+      else:
+        wt3 = pred3
+      if(wt2 == diff1):
+        wt2 = pred1
+      elif(wt2 == diff2):
+        wt2 = pred2
+      else:
+        wt2 = pred3
+      if(wt1 == diff1):
+        wt1 = pred1
+      elif(wt1 == diff2):
+        wt1 = pred2
+      else:
+        wt1 = pred3
+      temp1 = ((1*wt3[i])+(2*wt2[i])+(3*wt1[i]))/6
+      predrid.insert(i, temp1)
+      temp3 = distance[i]/temp1
+      temp4 = distance[i]/obs[i]
+      val.insert(i, temp3)
+      valobs.insert(i, temp4)
+      i = i + 1
+    k = 0
+    while(k<len(obs)):
+      print pred1[k], pred2[k], pred3[k], predrid[k], obs[k]
+      k = k + 1
+  else:
+    i = 0
+    while(i<13):
+      val.insert(i, distance[i])
+      i = i + 1
+    #print "Final time/distance: "
+    print val  
+  addedge(val)
+  visited, path = dijsktra(graph, start)
+  route = []
+  j = 0;
+  #print "The path follows the sequence of Nodes: " 
+  #print dest
+  d = dest
+  while(d != start):
+    route.insert(j, d)
+    d = path[d]
+    #print d
+  route.insert(j, d)
+  #print route
+
+
+  win = GraphWin("Graph", 1000, 800)
+  drawGraph(win)
+  
+  if(rd == 1):
+    startanddest('red')
+    routedrawing(route, rd, 'red')
+  else:
+    startanddest('blue')
+    routedrawing(route, rd, 'blue')
+  win1 = GraphWin("Data", 350, 500)
+  textdisp('black', 30, 100, "ROAD", win1)
+  textdisp('black', 150, 100, "OBSERVED", win1)
+  textdisp('black', 250, 100, "PREDICTED", win1)
+  m = 0
+  x = 30
+  y = 150
+  while(m<(len(obs)-1)):
+    textdisp('black', x, y, road[m], win1)
+    if(m == 0):
+      t = round(predrid[m])
+    else:
+      t = round(predrid[m][0])
+    textdisp('black', x + 120, y, round(obs[m]), win1)
+    textdisp('black', x + 230, y, t, win1)
+    y = y + 25
+    m = m + 1
+  p1 = win.getMouse()
+  while ((not((p1.getX() >= 650 and p1.getX() <= 730) and (p1.getY() >= 650 and p1.getY() <= 680))) and (not((p1.getX() >= 310 and p1.getX() <= 450) and (p1.getY() >= 650 and p1.getY() <= 680))) and (not((p1.getX() >= 110 and p1.getX() <= 225) and (p1.getY() >= 650 and p1.getY() <= 675)))):
+    p1 = win.getMouse()
+  flag = 0
+  while((p1.getX() >= 110 and p1.getX() <= 225) and (p1.getY() >= 650 and p1.getY() <= 675)):
+    if(rd == 1 and flag == 0):
+      rd = 2
+      color = 'blue'
+      flag = 1
+    elif(flag == 0):
+      rd = 1
+      color = 'red'
+      flag = 1
+    win.close()
+    win = GraphWin("Graph", 1000, 800)
+    drawGraph(win)
+    startanddest(color)
+    rd, color = routedrawing(route, rd, color)
+    p1 = win.getMouse()
+    
+  if((p1.getX() >= 650 and p1.getX() <= 730) and (p1.getY() >= 650 and p1.getY() <= 680)):
+    ch = 0
+  elif((p1.getX() >= 310 and p1.getX()) <= 450 and (p1.getY() >= 650 and p1.getY() <= 680)):
+    ch = 1
+  win1.close()
+  win.close()
