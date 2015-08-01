@@ -1,0 +1,298 @@
+from __future__ import division
+from numpy import *
+import MySQLdb
+import numpy as np
+def NLR(d, date, month, time1):
+    def daytonum(day):
+        if(day == "Tuesday" ):
+            return 2
+        elif (day == "Wednesday"):
+            return 3
+        elif (day == "Thursday"):
+            return 4
+        elif (day == "Friday"):
+            return 5
+        elif (day == "Saturday"):
+            return 6
+        elif (day == "Sunday"):
+            return 7
+        else:
+            return 1
+    def numberofweeks(d1, d, m):
+        s1 = 1
+        e = 0
+        flag = 0
+        while(s1<m):
+            if(s1 == 2):
+                while(d1<28 and flag == 0):
+                    e = e + 1
+                    if(d1<22):
+                        d1 = d1 + 7
+                    else:
+                        d1 = d1 + 7
+                        d1 = d1 - 28
+                        flag = 1
+                s1 =s1 + 1
+            else:
+                while(d1<31 and flag == 0):
+                    e = e + 1
+                    if(d1<25):
+                        d1 = d1 + 7
+                    else:
+                        d1 = d1 + 7
+                        d1 = d1 - 31
+                        flag = 1
+                s1 =s1 + 1
+        while(d1<d):
+            e = e + 1
+            d1 = d1 + 7
+        return e
+    db = MySQLdb.connect("localhost","root","password","test")
+    cursor=db.cursor()
+    '''
+    day = daytonum(raw_input("Enter day: "))
+    date = input( "Enter date :")
+    month = input("Enter 01.Jan 02.Feb : ")
+    time1 = raw_input( "Enter time frame : ")
+    '''
+    predictor = []
+    day = daytonum(d)
+    time = int(time1)
+    roaddist = {"AB": 0, "BA": 0, "CD": 0, "AE":0, "CE": 0, "CF": 0, "AD": 0, "EC": 0, "DC": 0, "BE": 0, "EB": 0, "BF": 0, "FB": 0 }
+    if(month == 1):
+        if(date<26):
+            print("not enough training.")
+    def startdate(day):
+        if(day == 1):
+            return 5
+        elif(day == 2):
+            return 6
+        elif(day == 3):
+            return 7
+        elif(day == 4):
+            return 1
+        elif(day == 5):
+            return 2
+        elif(day == 6):
+            return 3
+        else:
+            return 4
+    i = 0
+
+    dateday = []
+    wt1 = array ( [[3, 0, 0]] )
+    wt2 = array ( [[3, 0, 0], [0, 1, 0]] )
+    wt3 = array ( [[3, 0, 0], [0, 1, 0], [0, 0, 1]] )
+    wt4 = array ( [[3, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]] )
+    wt5 = array ( [[3, 0, 0, 0, 0], [0, 1, 0, 0, 0], [0, 0, 1, 0, 0], [0, 0, 0, 1, 0], [0, 0, 0, 0, 1]] )
+    q = 0
+    while(q<13):
+        m1 = month
+        m2 = month
+        m3 = month
+        m4 = 1
+        m5 = 2
+        m6 = 1
+        m7 = 1
+        m8 = 1
+        m9 = month
+        m10 = 1
+        m11 = 1
+        date1 = startdate(day)
+        if(day == 2):
+            wt = wt2
+            dateday = [12]
+        elif (day == 3):
+            wt = wt3
+            dateday = [12, 13]
+        elif (day == 4):
+            wt = wt4
+            dateday = [5, 6, 7]
+        elif (day == 5):
+            wt = wt5
+            dateday = [5, 6, 7, 8]
+        elif (day == 6):
+            wt = wt2
+            dateday = [3]
+        else:
+            wt = wt1
+        road = ["AB","BA","CD","AE","CE","CF","AD", "EC", "DC", "BE", "EB", "BF", "FB"]
+        x4 = []
+        x = []
+        r = 0
+        a = []
+        y = [] #Used as an intermediate list to store into the output matrix
+        date2 = 0
+        e = numberofweeks(date1, date, month)
+        print date1, date, month
+        print e
+        f = 0
+        while(f<(e-2)):
+            x = []
+            print date1, dateday, date2
+            if(date1<10):
+                table1 = "j0"+str(date1)+"0"+str(m6)
+            else:
+                table1 = "j"+str(date1)+"0"+str(m6)
+            cursor.execute("SELECT speed FROM " + table1 + " where time = " + str(time) + " AND road = '" + road[q] + "';")
+            x.insert(0, np.array(cursor.fetchall()))
+            z = 0
+            while(z<len(dateday)):
+                if(dateday[z]<10):
+                    table2 = "j0"+str(dateday[z])+"0"+str(m7)
+                else:
+                    table2 = "j"+str(dateday[z])+"0"+str(m7)
+                cursor.execute("SELECT speed FROM " + table2 + " where time = " + str(time) + " AND road = '" + road[q] + "';")
+                x.insert(z+1, np.array(cursor.fetchall()))
+                z = z + 1
+            if(m8 == 1):
+                if(date2<25):
+                    date2 = date1 + 7
+                else:
+                    date2 = date1 + 7
+                    date2 = date2 - 31
+                    m8 = m8  + 1
+                    m4 = m4 + 1
+            elif(m8 == 2):
+                if(date1<22):
+                    date2 = date1 + 7
+                else:
+                    date2 = date1 + 7
+                    date2 = date2 - 28
+                    m8 = m8 + 1
+                    m4 = m4 + 1
+            if(date2<10):
+                table3 = "j0"+str(date2)+"0"+str(m8)
+            else:
+                table3 = "j"+str(date2)+"0"+str(m8)
+            cursor.execute("SELECT Speed FROM " + table3 + " where time = " + str(time) + " AND road = '" + road[q] + "';")
+            x.insert(z, np.array(cursor.fetchall())) 
+            #Training the Machine 
+            #Inputting the values of the factors and finding the averages and storing into the Array and also the output data
+            j = 0;
+            k = 0;
+            a = []
+            while ( j<(len(x)-1) ):
+                a.insert(j, x[j][0][0])
+                j = j + 1
+            if ( r == 0):
+                X = array(a)
+            else :
+                X = vstack((X, a))
+            w = len(x) - 1
+            temp = x[w][0][0]
+            y.insert(r, temp)
+            r = r + 1
+            if(m6 == 1):
+                if(date1<25):
+                    date1 = date1 + 7
+                else:
+                    date1 = date1 + 7
+                    date1 = date1 - 31
+                    m6 = m6 + 1
+                    m4 = m4 + 1
+            elif(m6 == 2):
+                if(date1<22):
+                    date1 = date1 + 7
+                else:
+                    date1 = date1 + 7
+                    date1 = date1 - 28
+                    m6 = m6 + 1
+                    m4 = m4 + 1
+            z = 0
+            flag = 0
+            while(z<len(dateday) and f<(e-2)):
+                if(m7 == 1):
+                    if(date1<25):
+                        dateday[z] = dateday[z] + 7
+                    else:
+                        dateday[z] = dateday[z] + 7
+                        dateday[z] = dateday[z] - 31
+                        flag = 1
+                elif(m7 == 2):
+                    if(date1<22):
+                        dateday[z] = dateday[z] + 7
+                    else:
+                        dateday[z] = dateday[z] + 7
+                        dateday[z] = dateday[z] - 28
+                        flag = 1
+                z = z + 1
+            if(flag == 1):
+                m7 = m7 + 1
+            f = f + 1
+        X1 = dot(X, wt)
+        i = 0
+        #storing output to Y
+        k = 0
+        while( k<len(y) ):
+            if(k == 0):
+                Y1 = array(y[k])
+            else:
+                Y1 = vstack((Y1, y[k]))
+            k = k + 1            
+        #Using Scikit to Predict the models
+        from sklearn import linear_model
+        regr = linear_model.LinearRegression()
+        regr.fit(X1, Y1)
+        z = 0
+        #Prediction
+        if(month == 2):
+                if(date>7):
+                    date1 = date - 7
+                else:
+                    date1 = 7 - date
+                    date1 = 31 - date1
+                    m1 = m1 - 1
+        elif(month == 3):
+            if(date>7):
+                date1 = date - 7
+            else:
+                date1 = 7 - date
+                date1 = date1 - 28
+                m1 = m1 - 1
+        if(date1<10):
+            table1 = "j0"+str(date1)+"0"+str(m6)
+        else:
+            table1 = "j"+str(date1)+"0"+str(m6)
+        cursor.execute("SELECT speed FROM " + table1 + " where time = " + str(time) + " AND road = '" + road[q] + "';")
+        x4.insert(0, np.array(cursor.fetchall()))
+        while(z<len(dateday)):
+            if(dateday[z]<10):
+                table2 = "j0"+str(dateday[z])+"0"+str(m7)
+            else:
+                table2 = "j"+str(dateday[z])+"0"+str(m7)
+            cursor.execute("SELECT speed FROM " + table2 + " where time = " + str(time) + " AND road = '" + road[q] + "';")
+            x4.insert(z+1, np.array(cursor.fetchall()))
+            z = z + 1
+        if(date<10):
+            table4 = "j0"+str(date)+"0"+str(m1)
+        else:
+            table4 = "j"+str(date)+"0"+str(m1)
+        print date1, dateday, date
+        cursor.execute("SELECT Speed FROM " + table4 + " where time = " + str(time) + " AND road = '" + road[q] + "';")
+        xobserved = np.array(cursor.fetchall())
+        #Applying model to new datas
+        i = 0;
+        a = []
+        #Getting new input datas
+        while( i<1 ):
+            j = 0;
+            k = 0;
+            while ( k<len(a) and i!=0 ):
+                del a[k]
+            while ( j<len(x4) ):
+                a.insert(j, x4[j][0][0])
+                j = j + 1
+            if ( i == 0):
+                R = array(a)
+            else :
+                R = vstack((R, a))
+            i = i + 1
+        R2 = dot(R, wt)
+        print R
+        #Predicting the output of input data
+        Y = regr.predict(R2)
+        print "The Final Predicted traffic speed: ", abs(Y), xobserved
+        predictor.insert(q, Y[0])
+        q = q + 1
+    return predictor
